@@ -7,9 +7,9 @@ use std::path::PathBuf;
 struct File {
     file_name: String,
     parent_directory: String,
-    date: Option<String>,
-    title: Option<String>,
-    description: Option<String>,
+    date: String,
+    title: String,
+    description: String,
     content: String,
 }
 
@@ -47,11 +47,11 @@ fn markdown_to_html(path: String, content: String) -> File {
     let end = end_wrapped.unwrap();
     let meta_data = &content[3..end + 2];
 
-    let date: String;
-    let title: String;
-    let description: String;
+    let mut date: String;
+    let mut title: String;
+    let mut description: String;
 
-    meta_data_extractor(meta_data);
+    (date, title, description) = meta_data_extractor(meta_data);
     // println!("{meta_data}\n\n");
 
     let html = markdown::to_html(&content[end + 7..]);
@@ -59,9 +59,9 @@ fn markdown_to_html(path: String, content: String) -> File {
     return File {
         file_name: file_name.to_str().unwrap().to_string(),
         parent_directory: path,
-        date: None,
-        title: None,
-        description: None,
+        date: date,
+        title: title,
+        description: description,
         content: html,
     };
 }
@@ -77,8 +77,8 @@ fn main() {
 
     let contents_read = fs::read_to_string(path).unwrap();
     let f: File = markdown_to_html(path.to_string(), contents_read);
-    // println!(
-    //     "file_name: {}\npath:{}\ncontent:\n{}",
-    //     f.file_name, f.parent_directory, f.content
-    // );
+    println!(
+        "file_name: {}\npath:{}\ncontent:\n{}\n",
+        f.file_name, f.parent_directory, f.content
+    );
 }
