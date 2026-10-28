@@ -16,6 +16,15 @@ struct File {
     content: String,
 }
 
+fn string_to_bool(str: &str) -> bool {
+    let sliced = &str[0..4];
+    // println!("{}", sliced);
+    if sliced == "true" {
+        return true;
+    }
+    false
+}
+
 fn meta_data_extractor(content: &str) -> (String, String, String, bool, bool) {
     let lines = content.lines();
     let mut date: String = "".to_string();
@@ -29,8 +38,8 @@ fn meta_data_extractor(content: &str) -> (String, String, String, bool, bool) {
             "date" => date = meta_data[1].to_string(),
             "title" => title = meta_data[1].to_string(),
             "description" => desc = meta_data[1].to_string(),
-            // "toc" => println!("{}", meta_data[1].to_string().trim_start().trim_end()),
-            // "header" => println!("{}", meta_data[1].to_string().trim_start().trim_end()),
+            "toc" => toc = string_to_bool(meta_data[1].to_string().trim_start()),
+            "header" => header = string_to_bool(meta_data[1].to_string().trim_start()),
             "" => (),
             &_ => println!(
                 "Header not found |{}|",
@@ -62,10 +71,12 @@ fn markdown_to_html(path: String, content: String) -> File {
     let mut toc: bool;
     let mut header: bool;
     (date, title, description, toc, header) = meta_data_extractor(meta_data);
-    // println!("{meta_data}\n\n");
 
     let html = markdown::to_html(&content[end + 7..]);
-    let file_name = std::path::Path::new(&path).display().to_string();
+    let file_name = std::path::Path::new(&path)
+        .display()
+        .to_string()
+        .replacen("content", "public", 1);
 
     return File {
         file_name: file_name,
@@ -82,31 +93,21 @@ fn get_html_from_file(path: &Path) -> File {
     // println!("{}", path.display());
     let contents_read = fs::read_to_string(path).unwrap();
     let f: File = markdown_to_html(path.display().to_string(), contents_read);
-    println!("file_name: {}\ncontent:\n{}\n", f.file_name, f.content);
+    println!(
+        "file_name: {}\ntoc: {}\nheader: {}\ntitle: {}\ndescription:{}\ncontent:\n{}\n",
+        f.file_name, f.toc, f.header, f.title, f.description, f.content,
+    );
     println!("-------------------------------------");
     f
 }
 
 fn main() -> Result<()> {
-    // let contents_path = std::path::Path::new("./content/index.md");
-    // let path = "./content/";
-    let content_path = Path::new("content/");
-
     for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
         let file_name = file.file_name().to_string_lossy();
         if file_name.ends_with(".md") {
-            // println!("{}", file.path().display());
             get_html_from_file(file.path());
         }
     }
 
-    // println!("File parent_directory: {}", path);
-
-    // let contents_read = fs::read_to_string(path).unwrap();
-    // let f: File = markdown_to_html(path.to_string(), contents_read);
-    // println!(
-    //     "file_name: {}\npath:{}\ncontent:\n{}\n",
-    //     f.file_name, f.parent_directory, f.content
-    // );
     Ok(())
 }

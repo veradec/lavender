@@ -1,7 +1,7 @@
 +++
 title = "About verade"
 date = 2026-05-24 
-toc = true
+toc = false
 header = false
 +++
 
