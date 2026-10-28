@@ -3,10 +3,11 @@ use anyhow::Result;
 use markdown;
 use std::env;
 use std::fs;
+use std::fs::File;
 use std::path::Path;
 use walkdir::WalkDir;
 
-struct File {
+struct HTMLFile {
     file_name: String,
     date: String,
     toc: bool,
@@ -18,7 +19,6 @@ struct File {
 
 fn string_to_bool(str: &str) -> bool {
     let sliced = &str[0..4];
-    // println!("{}", sliced);
     if sliced == "true" {
         return true;
     }
@@ -50,7 +50,7 @@ fn meta_data_extractor(content: &str) -> (String, String, String, bool, bool) {
     return (date, title, desc, toc, header);
 }
 
-fn markdown_to_html(path: String, content: String) -> File {
+fn markdown_to_html(path: String, content: String) -> HTMLFile {
     let mut end: usize = 0;
     if &content[0..3] != "+++" {
         println!("It doesnt pass");
@@ -78,34 +78,38 @@ fn markdown_to_html(path: String, content: String) -> File {
         .to_string()
         .replacen("content", "public", 1);
 
-    return File {
-        file_name: file_name,
-        date: date,
-        title: title,
-        description: description,
+    return HTMLFile {
+        file_name,
+        date,
+        title,
+        description,
         content: html,
-        toc: toc,
-        header: header,
+        toc,
+        header,
     };
 }
 
-fn get_html_from_file(path: &Path) -> File {
-    // println!("{}", path.display());
+fn get_html_from_file(path: &Path) -> HTMLFile {
     let contents_read = fs::read_to_string(path).unwrap();
-    let f: File = markdown_to_html(path.display().to_string(), contents_read);
-    println!(
-        "file_name: {}\ntoc: {}\nheader: {}\ntitle: {}\ndescription:{}\ncontent:\n{}\n",
-        f.file_name, f.toc, f.header, f.title, f.description, f.content,
-    );
-    println!("-------------------------------------");
+    let f: HTMLFile = markdown_to_html(path.display().to_string(), contents_read);
     f
+}
+
+fn write_content_to_file(f: HTMLFile) {
+    let file_path = f.file_name;
+    let path = Path::new(&file_path);
+
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent);
+    }
+    fs::write(path, f.content);
 }
 
 fn main() -> Result<()> {
     for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
         let file_name = file.file_name().to_string_lossy();
         if file_name.ends_with(".md") {
-            get_html_from_file(file.path());
+            write_content_to_file(get_html_from_file(file.path()));
         }
     }
 
