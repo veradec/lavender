@@ -73,10 +73,16 @@ fn markdown_to_html(path: String, content: String) -> HTMLFile {
     (date, title, description, toc, header) = meta_data_extractor(meta_data);
 
     let html = markdown::to_html(&content[end + 7..]);
-    let file_name = std::path::Path::new(&path)
+    let mut file_name = std::path::Path::new(&path)
         .display()
         .to_string()
         .replacen("content", "public", 1);
+    if file_name != "public/index.md" {
+        file_name = file_name[0..(file_name.len() - 3)].to_string() + "/index.html";
+    } else {
+        file_name = "public/index.html".to_string();
+    }
+    println!("File Path: {file_name}");
 
     return HTMLFile {
         file_name,
