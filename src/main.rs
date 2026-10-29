@@ -82,7 +82,6 @@ fn markdown_to_html(path: String, content: String) -> HTMLFile {
     } else {
         file_name = "public/index.html".to_string();
     }
-    println!("File Path: {file_name}");
 
     return HTMLFile {
         file_name,
@@ -104,20 +103,26 @@ fn get_html_from_file(path: &Path) -> HTMLFile {
 fn write_content_to_file(f: HTMLFile) {
     let file_path = f.file_name;
     let path = Path::new(&file_path);
-
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent);
     }
     fs::write(path, f.content);
 }
 
-fn main() -> Result<()> {
-    for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
-        let file_name = file.file_name().to_string_lossy();
-        if file_name.ends_with(".md") {
-            write_content_to_file(get_html_from_file(file.path()));
-        }
-    }
+fn replace_with_content(html: String, content: &str) -> String {
+    return html.replace("{{content}}", content);
+}
 
+fn main() -> Result<()> {
+    // for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
+    //     let file_name = file.file_name().to_string_lossy();
+    //     if file_name.ends_with(".md") {
+    //         write_content_to_file(get_html_from_file(file.path()));
+    //     }
+    // }
+    println!(
+        "{}",
+        replace_with_content("This isn't {{content}}".to_string(), "Jinja2")
+    );
     Ok(())
 }
