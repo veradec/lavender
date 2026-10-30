@@ -83,12 +83,16 @@ fn markdown_to_html(path: String, content: String) -> HTMLFile {
 
         html = fs::read_to_string("templates/post.html")
             .unwrap()
-            .replace("{{content}}", &html);
+            .replace("{{content}}", &html)
+            .replace("{{title}}", &title)
+            .replace("{{description}}", &description);
     } else {
         file_name = "public/index.html".to_string();
         html = fs::read_to_string("templates/index.html")
             .unwrap()
-            .replace("{{content}}", &html);
+            .replace("{{content}}", &html)
+            .replace("{{title}}", &title)
+            .replace("{{description}}", &description);
     }
 
     return HTMLFile {
