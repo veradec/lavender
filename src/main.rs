@@ -72,15 +72,19 @@ fn markdown_to_html(path: String, content: String) -> HTMLFile {
     let mut header: bool;
     (date, title, description, toc, header) = meta_data_extractor(meta_data);
 
-    let html = markdown::to_html(&content[end + 7..]);
+    let mut html = markdown::to_html(&content[end + 7..]);
+
     let mut file_name = std::path::Path::new(&path)
         .display()
         .to_string()
         .replacen("content", "public", 1);
     if file_name != "public/index.md" {
         file_name = file_name[0..(file_name.len() - 3)].to_string() + "/index.html";
+
+        html = replace_with_content(fs::read_to_string("templates/post.html").unwrap(), &html);
     } else {
         file_name = "public/index.html".to_string();
+        html = replace_with_content(fs::read_to_string("templates/index.html").unwrap(), &html);
     }
 
     return HTMLFile {
@@ -114,15 +118,11 @@ fn replace_with_content(html: String, content: &str) -> String {
 }
 
 fn main() -> Result<()> {
-    // for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
-    //     let file_name = file.file_name().to_string_lossy();
-    //     if file_name.ends_with(".md") {
-    //         write_content_to_file(get_html_from_file(file.path()));
-    //     }
-    // }
-    println!(
-        "{}",
-        replace_with_content("This isn't {{content}}".to_string(), "Jinja2")
-    );
+    for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
+        let file_name = file.file_name().to_string_lossy();
+        if file_name.ends_with(".md") {
+            write_content_to_file(get_html_from_file(file.path()));
+        }
+    }
     Ok(())
 }
