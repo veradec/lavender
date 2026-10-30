@@ -81,10 +81,14 @@ fn markdown_to_html(path: String, content: String) -> HTMLFile {
     if file_name != "public/index.md" {
         file_name = file_name[0..(file_name.len() - 3)].to_string() + "/index.html";
 
-        html = replace_with_content(fs::read_to_string("templates/post.html").unwrap(), &html);
+        html = fs::read_to_string("templates/post.html")
+            .unwrap()
+            .replace("{{content}}", &html);
     } else {
         file_name = "public/index.html".to_string();
-        html = replace_with_content(fs::read_to_string("templates/index.html").unwrap(), &html);
+        html = fs::read_to_string("templates/index.html")
+            .unwrap()
+            .replace("{{content}}", &html);
     }
 
     return HTMLFile {
@@ -113,11 +117,25 @@ fn write_content_to_file(f: HTMLFile) {
     fs::write(path, f.content);
 }
 
-fn replace_with_content(html: String, content: &str) -> String {
-    return html.replace("{{content}}", content);
+fn copy_dir(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> std::io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
 }
 
 fn main() -> Result<()> {
+    // copy static folder to public folder
+    copy_dir(Path::new("static"), Path::new("public"));
+    //////
+
     for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
         let file_name = file.file_name().to_string_lossy();
         if file_name.ends_with(".md") {
