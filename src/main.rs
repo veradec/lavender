@@ -67,7 +67,10 @@ fn markdown_to_html(path: String, content: String) -> HTMLFile {
 
     let (date, title, description, toc, header) = meta_data_extractor(meta_data);
 
-    let mut html = markdown::to_html(&content[end + 7..]);
+    let mut options = markdown::Options::gfm();
+    options.compile.allow_dangerous_html = true;
+
+    let mut html = markdown::to_html_with_options(&content[end + 7..], &options).unwrap();
 
     let mut file_name = std::path::Path::new(&path)
         .display()
@@ -177,7 +180,6 @@ fn main() -> Result<()> {
     }
 
     generate_lists("public/".into());
-
     // copy static folder to public folder
     copy_dir(Path::new("static"), Path::new("public"));
 
