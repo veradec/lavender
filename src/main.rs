@@ -172,6 +172,9 @@ fn vec2html(mut path: String, dir_names: Vec<String>) {
 }
 
 fn main() -> Result<()> {
+    // copy index.html to public/
+    fs::copy("templates/index.html", "public/index.html");
+    ///
     for file in WalkDir::new("content/").into_iter().filter_map(|e| e.ok()) {
         let file_name = file.file_name().to_string_lossy();
         if file_name.ends_with(".md") {
@@ -180,6 +183,7 @@ fn main() -> Result<()> {
     }
 
     generate_lists("public/".into());
+
     // copy static folder to public folder
     copy_dir(Path::new("static"), Path::new("public"));
 
